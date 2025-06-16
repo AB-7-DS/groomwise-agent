@@ -1,24 +1,25 @@
+# -- Importing Libraries --
 import os
 from dotenv import load_dotenv
-
-# -- LangChain Components --
 from langchain.agents import AgentType, initialize_agent
+from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.tools import DuckDuckGoSearchRun
 from langchain_experimental.tools import PythonREPLTool
 from langchain.memory import VectorStoreRetrieverMemory
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
-from langchain.chat_models import ChatGroq
+from langchain.chat_models import ChatOpenAI
+
 
 # Load env variables
 load_dotenv()
 if os.getenv("GROQ_API_KEY") is None:
-    print("🔴 GROQ_API_KEY not found in .env. Please add it.")
+    print("GROQ_API_KEY not found in .env. Please add it.")
     exit()
 
 # -- LLM from GROQ --
-llm = ChatGroq(
+llm = ChatOpenAI(
     model="llama3-8b-8192",
     openai_api_base="https://api.groq.com/openai/v1",
     openai_api_key=os.getenv("GROQ_API_KEY"),
@@ -51,12 +52,12 @@ tool_descriptions = "\n".join([f"{tool.name}: {tool.description}" for tool in to
 prompt = PromptTemplate.from_template(f"""
 You are GroomWise — a polite, intelligent personal grooming advisor that helps users select skincare, haircare, and wellness products based on their needs.
 
-🧠 Your mission:
+ Your mission:
 - ALWAYS understand the user's skin type, concern, and budget BEFORE using tools.
 - DO NOT answer or search blindly. First, gather enough context.
 - If the input is vague (e.g., "Suggest something for my face" or "I have oily skin"), politely ask for clarification.
 
-🚫 NEVER use DuckDuckGoSearchRun or Python_REPL until:
+ NEVER use DuckDuckGoSearchRun or Python_REPL until:
 1. You know the user's skin/hair type.
 2. You understand the concern (e.g., acne, dark circles).
 3. You know the budget or have verified it's not needed.
@@ -127,7 +128,7 @@ def run_groomwise_agent():
         try:
             user_input = input("👤 You: ")
             if user_input.lower() == 'exit':
-                print("🤖 GroomWise: Farewell, radiant one.")
+                print(" GroomWise: Farewell, radiant one.")
                 break
 
             # Retrieve relevant past memory
@@ -137,10 +138,10 @@ def run_groomwise_agent():
 
             # Invoke the agent
             response = agent_chain.invoke({"input": combined_input})
-            print(f"🤖 GroomWise: {response['output']}")
+            print(f" GroomWise: {response['output']}")
 
             # Debug: Show memory
-            print("\n📦 FAISS Memory (Top 3 matches for 'oily skin'):")
+            print("\n FAISS Memory (Top 3 matches for 'oily skin'):")
             for i, doc in enumerate(retriever.vectorstore.similarity_search("oily skin", k=3)):
                 print(f"{i+1}.", doc.page_content)
 
@@ -148,7 +149,7 @@ def run_groomwise_agent():
             faiss_store.save_local("memory_index")
 
         except Exception as e:
-            print(f"🔴 An error occurred: {e}")
+            print(f" An error occurred: {e}")
             break
 
 if __name__ == "__main__":

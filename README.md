@@ -1,62 +1,75 @@
 # GroomWise: Your Personalized Skin & Grooming AI Agent
 
-GroomWise is a task-oriented AI agent built with LangChain. It assists users by understanding their skin, hair, and grooming concerns, along with their budget, to recommend suitable self-care products. The agent leverages a Large Language Model (LLM), web search capabilities, and calculation tools to provide personalized advice.
+GroomWise is a task-oriented AI agent built with LangChain. It assists users by understanding their skin, hair, and grooming concerns—along with their budget—to recommend suitable self-care products. The agent leverages a Large Language Model (LLM), web search tools, code execution, and a vector memory store for context-aware recommendations.
 
+---
+## 🎥 Demo Video Walkthrough
+
+Click below to download or view the GroomWise walkthrough:
+
+▶️ [Watch GroomWise Demo](groomwise-demo.mp4)
+---
 ## 🚀 Agent Architecture & Components
 
-*   **LLM:** Llama3 via GROQ
-*   **Agent Type:** `ZERO_SHOT_REACT_DESCRIPTION`
-    *   **Reasoning:** This agent type is chosen for its ability to dynamically decide which tool to use (ReAct paradigm) based on tool descriptions.
-*   **Memory:** `ConversationBufferWindowMemory`
-    *   **Reasoning:** Used to maintain conversation history (e.g., last 5 turns), allowing for contextual understanding.
-*   **Core Tools Used:**
-    1.  **DuckDuckGoSearchRun:**
-        *   **Purpose:** To fetch real-time information about products, ingredients, skincare/haircare advice, and product availability/pricing from the web.
-    2.  **PythonREPLTool (from `langchain_experimental`):**
-        *   **Purpose:** To perform numerical calculations, primarily for budget checking (e.g., "Is product price X less than budget Y?"). It allows the agent to make precise financial decisions based on user constraints.
+- **LLM:** LLaMA3 via [GROQ](https://console.groq.com/)
+- **Agent Type:** `ZERO_SHOT_REACT_DESCRIPTION`
+  - **Why:** ReAct agents dynamically choose tools based on instructions and reason step-by-step for answers.
+- **Memory:** `FAISS` + `VectorStoreRetrieverMemory`
+  - **Why:** Supports long-term memory by storing and recalling previous user questions/responses with semantic search.
+- **Tools Used:**
+  1. **DuckDuckGoSearchRun**  
+     - Search for real-time skincare, haircare, and product info online.
+  2. **PythonREPLTool**  
+     - Evaluate expressions like price comparisons (e.g., `850 < 1000`) for budget filtering.
+
+---
 
 ## 🛠️ Tool Integration & Rationale
 
-*   **DuckDuckGoSearchRun:** Integrated to provide the agent with access to up-to-date information. For a grooming assistant, this is crucial as product availability, formulations, and prices change.
-*   **PythonREPLTool:** This tool is vital for handling budget constraints effectively. The LLM can formulate simple Python expressions (e.g., `750 < 1000`) based on extracted product prices and user-defined budgets. The REPL executes these expressions, giving a concrete True/False that guides the agent's recommendations.
+| Tool                | Use Case                                                             |
+|---------------------|----------------------------------------------------------------------|
+| DuckDuckGoSearchRun | Get up-to-date product info and user recommendations from the web.   |
+| PythonREPLTool      | Perform calculations for logic such as budget verification.          |
+| FAISS + Embeddings  | Store & retrieve past inputs/responses to allow contextual follow-up. |
+
+---
 
 ## 🧱 Folder Structure
 
-```
+```bash
 groomwise-agent/
-├── app/
-│   └── streamlit.py              # Streamlit-based chat UI for GroomWise
+ # Streamlit-based frontend 
 ├── src/
-│   ├── __init__.py              # Module declaration
-│   └── groomwise_agent.py       # Core agent logic with tools, memory, prompt, and execution loop
-├── .env                         # API keys and environment configs
-├── requirements.txt             # All Python dependencies
-└── README.md                    # Project overview and setup
+│ ├── init.py
+| └── streamlit.py
+│ └── groomwise_agent.py # Core agent logic with LLM, tools, memory, and CLI loop
+├── memory_index/ # FAISS index folder (auto-generated)
+├── .env # API keys
+├── requirements.txt # Python dependencies
+└── README.md # Project documentation
 ```
+---
+## ⚙️ Setup Instructions
 
-## ⚙️ Setup and Installation Steps
+1. **Clone Repository**
+2. **Create Virtual Environment**
+   ```bash
+   python -m venv venv
+   # Windows: venv\Scripts\activate
+   ```
 
-1.  **Clone the Repository**
+3. **Install Dependencies**
 
-2.  **Create and Activate Virtual Environment:**
     ```bash
-    python -m venv venv
-    # Windows: venv\Scripts\activate
+            pip install -r requirements.txt
+            Environment Variables
     ```
+4. **Create .env in root**
 
-3.  **Install Dependencies:**
     ```bash
-    pip install -r requirements.txt
+    GROQ_API_KEY="your_groq_api_key"
     ```
-
-4.  **Set Up Environment Variables:**
-    Create a `.env` file in the root of the project directory:
-    ```
-    GROQ_API_KEY="YOUR_GROQ_API_KEY"
-    ```
-    Replace `"YOUR_GROQ_API_KEY"` with your actual API key from GROQ.
-
-## ▶️ Usage Instructions
+## ▶️ Running GroomWise
 
 1.  **Run the Agent (CLI):**
     ```bash
@@ -65,33 +78,54 @@ groomwise-agent/
 
 2.  **Launch the Streamlit Interface (GUI):**
     ```bash
-    streamlit run app/streamlit.py
+    streamlit run src/streamlit.py
     ```
+--
 
-3.  **Interact with GroomWise:**
-    The agent will greet you. Type your grooming-related questions or concerns.
-    Examples:
-    *   "I have oily skin and a budget of 1000 PKR. What face wash do you recommend?"
-    *   "Suggest a hair oil for dry scalp, preferably coconut-based."
-    *   "What's a good daily routine for combination skin in summer?"
-    *   Type `exit` to end the conversation in CLI mode.
+## ✅ Key Features
 
-## 💡 Known Issues & Future Improvements
+- 🔍 **Tool Reasoning (ReAct Prompting):**  
+  The agent only uses tools (search/calculator) after gathering required context (skin type, concern, and budget).
 
-*   **Search Result Specificity:** The quality of DuckDuckGo search results can vary. Sometimes specific product prices or local availability might be hard to find directly.
-*   **Python REPL Robustness:** While useful for simple checks, complex queries requiring the LLM to generate intricate Python code for the REPL might be error-prone.
-*   **No Long-Term Memory:** The current memory is conversational (short-term). User preferences across sessions are not stored.
-*   **Limited Product Database:** The agent relies solely on web search; it doesn't have an internal, curated product database.
+- 🧠 **Long-Term Memory via FAISS:**  
+  Stores and recalls prior user interactions (e.g., past product suggestions) to enable contextual follow-up.
 
-**Future Improvements:**
-*   **Integrate a Vector Database (e.g., ChromaDB, FAISS):** For long-term memory of user preferences or even a cached database of popular products.
-*   **Use LangGraph:** To model more complex, cyclical, or stateful agent workflows.
-*   **More Specific Tools:** Develop custom tools for parsing e-commerce sites (ethically and respecting `robots.txt`) or for more structured product information retrieval.
-*   **UI Implementation:** Build a Streamlit or Flask interface for a richer user experience.
-*   **Advanced Error Handling:** Implement more sophisticated error handling and recovery mechanisms for tool failures.
+- 🔢 **Budget-Aware Recommendations:**  
+  Uses `PythonREPLTool` to ensure product suggestions fall within the user's specified budget.
 
-## 📐 Agent Architecture Diagram (High-Level)
+- 🌐 **Real-Time Search:**  
+  `DuckDuckGoSearchRun` allows GroomWise to provide fresh and relevant recommendations from the web.
+
+- 🤖 **LLM Reasoning:**  
+  Powered by LLaMA3 via GROQ, providing high-quality natural language understanding and decision-making.
+
+---
+## 💡 Known Issues & Future Plans
+
+| Issue / Limitation                                | Planned Improvement                                                   |
+|---------------------------------------------------|------------------------------------------------------------------------|
+| ❓ Agent doesn't handle vague queries effectively  | Improve prompt parsing and add fuzzy clarification logic               |
+| 🔄 No follow-up questions when info is missing     | Inject memory check + custom prompt loop for clarification             |
+| 🐢 Slower response time (due to tool chaining)     | Optimize tool usage and reduce unnecessary LLM thinking steps          |
+| 🔍 FAISS search is basic                          | Add filters or summarize matches before injecting into prompt          |
+| 🔐 No user-based memory persistence yet            | Add user ID/session-based vector store separation                      |
+
+
+---
+
+## 📐 Architecture Overview
 
 ![GroomWise Architecture](./GroomWise.png)
 
-> This diagram illustrates the flow of user input through the Streamlit UI into the LangChain agent. The agent invokes tools such as `DuckDuckGoSearchRun` and `PythonREPLTool` when necessary and passes observations and memory into the LLM (powered by GROQ). Based on tool results and reasoning, the LLM generates a final recommendation, presented back to the user as GroomWise's response.
+> **Flow:**  
+> User input → Streamlit UI / CLI → LangChain Agent → Tools → FAISS (memory recall) → GROQ-powered LLaMA3 LLM  
+> → Agent returns contextual and budget-aware recommendations to user as GroomWise’s final answer.
+
+---
+
+## ✨ Credits
+
+- Developed using **LangChain**, **GROQ**, **FAISS**, **HuggingFace**, and **Streamlit**
+- Architecture inspired by **tool-use agents**, **ReAct prompting**, and **vector-based memory recall**
+
+---
