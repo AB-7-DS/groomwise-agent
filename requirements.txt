@@ -8,7 +8,7 @@ pandas
 requests
 python-dotenv
 streamlit
-huggingface_hub
 openai
 faiss-cpu
 sentence-transformers
+langchain-groq

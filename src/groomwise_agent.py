@@ -10,7 +10,7 @@ from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
-
+from langchain_groq import ChatGroq
 
 # Load env variables
 load_dotenv()
@@ -19,13 +19,11 @@ if os.getenv("GROQ_API_KEY") is None:
     exit()
 
 # -- LLM from GROQ --
-llm = ChatOpenAI(
+llm = ChatGroq(
     model="llama3-8b-8192",
-    openai_api_base="https://api.groq.com/openai/v1",
-    openai_api_key=os.getenv("GROQ_API_KEY"),
+    groq_api_key=os.getenv("GROQ_API_KEY"),
     temperature=0.7
 )
-
 # -- Tools --
 python_tool = PythonREPLTool(
     globals={},
@@ -153,4 +151,6 @@ def run_groomwise_agent():
             break
 
 if __name__ == "__main__":
+    print("✅ GROQ API Loaded:", os.getenv("GROQ_API_KEY"))
     run_groomwise_agent()
+    
